@@ -1,7 +1,7 @@
 import time
 import subprocess
 import os
-
+import traceback
 import runpod
 import requests
 from requests.adapters import HTTPAdapter, Retry
@@ -48,6 +48,8 @@ def run_inference(inference_request):
     '''
     Run inference on a request.
     '''
+    print(f"[Run Interface] Got {inference_request=}")
+
     response = cog_session.post(url=f'{LOCAL_URL}/predictions',
                                 json=inference_request, timeout=TIMEOUT)
 
@@ -62,9 +64,15 @@ def handler(event):
     This is the handler function that will be called by the serverless.
     '''
 
-    json = run_inference({"input": event["input"]})
+    print(f"[Handler] Got {event=}")
 
-    return json["output"]
+    while True:
+        try:
+            json = run_inference(event["input"])
+            return json["output"]
+        except Exception as e:
+            print(f"Got {e=}")
+            traceback.print_exception(e)
 
 
 if __name__ == "__main__":
