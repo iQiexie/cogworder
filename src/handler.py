@@ -76,6 +76,8 @@ def handler(event):
 
 
 if __name__ == "__main__":
-    print("Cog API Service is ready. Starting RunPod serverless handler...")
-    time.sleep(3600)
+    wait_for_service(url=f'{LOCAL_URL}/health-check')
 
+    print("Cog API Service is ready. Starting RunPod serverless handler...")
+
+    runpod.serverless.start({"handler": handler})
