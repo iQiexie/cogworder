@@ -54,7 +54,7 @@ def run_inference(inference_request):
                                 json=inference_request, timeout=TIMEOUT)
 
     if response.status_code != 200:
-        print("Request failed - reason :", response.status_code, response.text)
+        raise RuntimeError("Request failed - reason :", response.status_code, response.text)
 
     return response.json()
 
@@ -71,8 +71,16 @@ def handler(event):
             json = run_inference(event["input"])
             return json["output"]
         except Exception as e:
-            print(f"Got {e=}")
-            traceback.print_exception(e)
+            import traceback
+            import requests
+            error_msg = f"Ошибка в handler: {str(e)}\n{traceback.format_exc()}"
+            print(f"[RunPod Handler] {error_msg}")
+            requests.post("https://back-dev.recrea.ai/api/v1/callbacks/runpod_logs", data=error_msg)
+            return {
+                'error': error_msg,
+                'status': 'failed',
+                'refresh_worker': True  # Перезагрузка воркера при ошибке
+            }
 
 
 if __name__ == "__main__":
